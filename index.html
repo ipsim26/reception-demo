@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>冬季懇談会 受付フォーム(デモ)</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #6b7280;
+    --line: #d5d9df;
+    --accent: #1f6feb;
+    --accent-fg: #ffffff;
+    --open-bg: #e6f6ec;
+    --open-fg: #14733a;
+    --open-border: #9fd8b4;
+    --booked-bg: #eceef1;
+    --booked-fg: #8a919b;
+    --booked-border: #d5d9df;
+    --sel-bg: #dbe8ff;
+    --sel-fg: #0b3d91;
+    --sel-border: #1f6feb;
+    --error: #c62828;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a;
+      --card: #1e2227;
+      --text: #e8eaed;
+      --muted: #9aa1ab;
+      --line: #353b43;
+      --accent: #4c8dff;
+      --accent-fg: #0b1220;
+      --open-bg: #12301e;
+      --open-fg: #6fdc97;
+      --open-border: #245a38;
+      --booked-bg: #262b31;
+      --booked-fg: #7b838e;
+      --booked-border: #353b43;
+      --sel-bg: #16305c;
+      --sel-fg: #b9d2ff;
+      --sel-border: #4c8dff;
+      --error: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.5;
+  }
+  [hidden] { display: none !important; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 120px; }
+  h1 { font-size: 1.5rem; margin: 0 0 8px; }
+  .request { margin: 0 0 16px; font-size: 1rem; }
+  .school { margin: 0 0 16px; text-align: right; color: var(--muted); font-size: .9rem; }
+  .demo { margin: 0 0 16px; padding: 8px 12px; border-radius: 8px; border: 1px solid #e0b34a; background: #fff6dc; color: #6b4e00; font-size: .9rem; }
+  @media (prefers-color-scheme: dark) { .demo { background: #3a2f10; border-color: #7a6118; color: #ffd978; } }
+  .note { color: var(--muted); margin: 24px 0 0; font-size: .9rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 20px; font-size: .85rem; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    border: 1px solid; font-size: .8rem; font-weight: 600;
+  }
+  .badge.open { background: var(--open-bg); color: var(--open-fg); border-color: var(--open-border); }
+  .badge.booked { background: var(--booked-bg); color: var(--booked-fg); border-color: var(--booked-border); }
+  .badge.sel { background: var(--sel-bg); color: var(--sel-fg); border-color: var(--sel-border); }
+
+  .days { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+  .day { background: var(--card); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .day h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .slot {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; border-radius: 8px; border: 1px solid;
+    font: inherit; color: inherit; text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+  .slot.open { background: var(--open-bg); color: var(--open-fg); border-color: var(--open-border); cursor: pointer; }
+  .slot.open:hover { filter: brightness(.97); }
+  .slot.booked { background: var(--booked-bg); color: var(--booked-fg); border-color: var(--booked-border); cursor: not-allowed; }
+  .slot.selected { background: var(--sel-bg); color: var(--sel-fg); border-color: var(--sel-border); font-weight: 700; }
+  .slot .status { font-size: .8rem; font-weight: 600; }
+
+  /* 下部の操作バー */
+  .bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--card); border-top: 1px solid var(--line);
+    padding: 12px 16px; box-shadow: 0 -2px 8px rgba(0,0,0,.08);
+  }
+  .bar-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .bar-info { font-size: .9rem; }
+  .bar-info small { display: block; color: var(--muted); }
+
+  button.btn {
+    font: inherit; font-weight: 700; padding: 10px 22px; border-radius: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-fg); cursor: pointer;
+  }
+  button.btn.secondary { background: transparent; color: var(--accent); }
+  button.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* 入力画面 */
+  .panel { background: var(--card); border-radius: 12px; padding: 20px 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); max-width: 560px; }
+  .panel h2 { font-size: 1.15rem; margin: 0 0 12px; }
+  ol.picks { margin: 0 0 20px; padding-left: 1.4em; }
+  ol.picks li { margin-bottom: 2px; }
+  label { display: block; font-weight: 600; margin: 0 0 4px; }
+  select, input[type="text"] {
+    width: 100%; font: inherit; padding: 10px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  }
+  .field { margin-bottom: 16px; }
+  .error { color: var(--error); font-size: .9rem; margin: 0 0 12px; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+</style>
+</head>
+<body>
+<main>
+  <h1>冬季懇談会 受付フォーム</h1>
+  <p class="school">岡村ゼミナール 飾磨校</p>
+  <p class="demo">これはデモ画面です。送信しても、データはどこにも送られず、記録されません。</p>
+
+  <!-- 手順1: 日時を選ぶ -->
+  <section id="step1">
+    <p class="request">ご希望の日時を、希望順に3件クリックしてください。</p>
+    <div class="legend">
+      <span><span class="badge open">受付中</span> 予約できます</span>
+      <span><span class="badge booked">予約済み</span> 埋まっています</span>
+      <span><span class="badge sel">第1希望</span> 選択中(もう一度押すと取り消し)</span>
+    </div>
+    <div class="days" id="days"></div>
+  </section>
+
+  <!-- 手順2: 学年・名前を入力 -->
+  <section id="step2" hidden>
+    <div class="panel">
+      <h2>ご希望の日時</h2>
+      <ol class="picks" id="picks"></ol>
+
+      <form id="form" novalidate>
+        <div class="field">
+          <label for="grade">学年</label>
+          <select id="grade" required>
+            <option value="">選択してください</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="name">生徒氏名（ひらがな）</label>
+          <input id="name" type="text" autocomplete="off" maxlength="50" required>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label>この欄は空のままにしてください <input id="website" type="text" tabindex="-1" autocomplete="off"></label>
+        </div>
+        <p class="error" id="error" role="alert" hidden></p>
+        <div class="actions">
+          <button type="button" class="btn secondary" id="back">戻る</button>
+          <button type="submit" class="btn" id="send">送信する</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 手順3: 完了 -->
+  <section id="step3" hidden>
+    <div class="panel">
+      <h2>送信しました</h2>
+      <p>ご希望の日時を受け付けました。<br>日程が確定しましたら、教室よりご連絡いたします。</p>
+      <p class="demo">デモのため、入力内容は送信・保存されていません。</p>
+    </div>
+  </section>
+
+  <p class="note" id="noteText">面談は30分を予定しております</p>
+</main>
+
+<!-- 選択状況と「次へ」(手順1のみ表示) -->
+<div class="bar" id="bar">
+  <div class="bar-inner">
+    <div class="bar-info"><span id="count">0 / 3 件選択中</span><small>希望順にクリックしてください</small></div>
+    <button type="button" class="btn" id="next" disabled>次へ</button>
+  </div>
+</div>
+
+<script>
+  // ===== 設定 =====
+  // Google Apps Script をウェブアプリとして公開したときのURLを貼り付けます
+  const ENDPOINT = "";   // デモ版: 送信先は設定しません(データはどこにも送られません)
+
+  const YEAR = 2026;
+  const DATES = ["12-16", "12-17", "12-18", "12-19"];
+  const START = 14 * 60 + 40;   // 14:40(最初の枠 14:00〜14:40 は除外)
+  const END = 21 * 60 + 20;     // 21:20(最後の枠 21:20〜22:00 は除外)
+  const STEP = 40;              // 分
+  const MAX_PICKS = 3;
+
+  // 予約済みの枠をここに追加します(形式: "MM-DD HH:MM")
+  const BOOKED = [
+    "12-16 14:40", "12-16 16:40", "12-17 15:20", "12-17 18:00", "12-18 17:20", "12-19 19:20",
+  ];
+
+  const GRADES = [
+    "小学3年", "小学4年", "小学5年", "小学6年",
+    "中学1年", "中学2年", "中学3年",
+  ];
+
+  // ===== 準備 =====
+  const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
+  const pad = n => String(n).padStart(2, "0");
+  const fmt = m => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  const $ = id => document.getElementById(id);
+
+  const selected = [];   // 選んだ順に枠IDを入れる(例: "12-16 14:40")
+  const slotInfo = {};   // 枠ID -> 表示用ラベル
+
+  // ===== 枠の表示 =====
+  const root = $("days");
+  for (const md of DATES) {
+    const [mo, d] = md.split("-").map(Number);
+    const wd = WEEK[new Date(YEAR, mo - 1, d).getDay()];
+
+    const day = document.createElement("section");
+    day.className = "day";
+    day.innerHTML = `<h2>${mo}/${d}(${wd})</h2>`;
+    const list = document.createElement("ul");
+
+    for (let t = START; t + STEP <= END; t += STEP) {
+      const id = `${md} ${fmt(t)}`;
+      const range = `${fmt(t)}〜${fmt(t + STEP)}`;
+      const booked = BOOKED.includes(id);
+      slotInfo[id] = `${mo}/${d}(${wd}) ${range}`;
+
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot " + (booked ? "booked" : "open");
+      btn.dataset.id = id;
+      btn.disabled = booked;
+      btn.innerHTML = `<span>${range}</span><span class="status">${booked ? "予約済み" : "受付中"}</span>`;
+      if (!booked) btn.addEventListener("click", () => toggle(id));
+      li.appendChild(btn);
+      list.appendChild(li);
+    }
+    day.appendChild(list);
+    root.appendChild(day);
+  }
+
+  function toggle(id) {
+    const i = selected.indexOf(id);
+    if (i >= 0) {
+      selected.splice(i, 1);                 // 取り消し(順位は詰め直す)
+    } else if (selected.length < MAX_PICKS) {
+      selected.push(id);
+    }
+    render();
+  }
+
+  function render() {
+    document.querySelectorAll(".slot.open").forEach(btn => {
+      const i = selected.indexOf(btn.dataset.id);
+      const status = btn.querySelector(".status");
+      btn.classList.toggle("selected", i >= 0);
+      status.textContent = i >= 0 ? `第${i + 1}希望` : "受付中";
+    });
+    $("count").textContent = `${selected.length} / ${MAX_PICKS} 件選択中`;
+    $("next").disabled = selected.length !== MAX_PICKS;
+  }
+
+  // ===== 画面の切り替え =====
+  function show(step) {
+    ["step1", "step2", "step3"].forEach(s => { $(s).hidden = s !== step; });
+    $("bar").hidden = step !== "step1";
+    $("noteText").textContent =
+      step === "step2" ? "スクリーンショットを撮り、この画面を記録してください"
+      : step === "step3" ? ""
+      : "面談は30分を予定しております";
+    window.scrollTo(0, 0);
+  }
+
+  $("next").addEventListener("click", () => {
+    $("picks").innerHTML = "";
+    selected.forEach((id, i) => {
+      const li = document.createElement("li");
+      li.textContent = `第${i + 1}希望: ${slotInfo[id]}`;
+      $("picks").appendChild(li);
+    });
+    $("error").hidden = true;
+    show("step2");
+  });
+
+  $("back").addEventListener("click", () => show("step1"));
+
+  // 学年の選択肢
+  GRADES.forEach(g => {
+    const o = document.createElement("option");
+    o.value = g; o.textContent = g;
+    $("grade").appendChild(o);
+  });
+
+  // ===== 送信 =====
+  function showError(msg) {
+    $("error").textContent = msg;
+    $("error").hidden = false;
+  }
+
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const grade = $("grade").value;
+    const name = $("name").value.trim();
+
+    if (!grade) return showError("学年を選択してください。");
+    if (!name) return showError("お名前を入力してください。");
+    if (selected.length !== MAX_PICKS) return showError("希望日時を3件選んでください。");
+
+    // デモ版: 通信は一切せず、送信した体で完了画面を出す
+    $("error").hidden = true;
+    $("send").disabled = true;
+    $("send").textContent = "送信中…";
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      show("step3");
+    } catch (err) {
+      showError("送信できませんでした。通信状況をご確認のうえ、もう一度お試しください。");
+      $("send").disabled = false;
+      $("send").textContent = "送信する";
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
